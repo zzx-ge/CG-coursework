@@ -23,4 +23,8 @@ public:
 		mousex = x;
 		mousey = y;
 	}
+	bool keyPressed(int key)
+	{
+		return keys[key];
+	}
 };

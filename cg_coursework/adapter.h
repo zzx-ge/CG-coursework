@@ -6,9 +6,7 @@
 #pragma comment(lib, "D3D11.lib")
 #pragma comment(lib, "D3DCompiler.lib")
 #pragma comment(lib, "DXGI.lib")
-extern "C" {
-	_declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
-}
+
 class Adapter
 {
 public:
@@ -56,7 +54,7 @@ public:
 	ID3D11RasterizerState* rasterizerState;
 
 
-	void init(int width, int height, HWND hwnd, bool window_fullscreen) { //the adapter is the one which you find by the functinon find adapter
+	void init(int width, int height, HWND hwnd, bool window_fullscreen = false) { //the adapter is the one which you find by the functinon find adapter
 		DXGI_SWAP_CHAIN_DESC sd;
 		memset(&sd, 0, sizeof(DXGI_SWAP_CHAIN_DESC));
 		sd.BufferCount = 1;

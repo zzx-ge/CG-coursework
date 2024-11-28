@@ -76,7 +76,7 @@ void Window::create(std::string window_name, int _window_width, int _window_heig
 	width = _window_width;
 	height = _window_height;
 	hwnd = CreateWindowEx(WS_EX_APPWINDOW, wname.c_str(), wname.c_str(), style, window_x, window_y, width, height, NULL, NULL, hinstance, this);
-	memset(keys, 0, 256 * sizeof(char)); //??????
+	memset(keys, 0, 256 * sizeof(bool)); //??????
 	window = this;
 }
 
@@ -89,7 +89,3 @@ void Window::processMessages() {
 		DispatchMessage(&msg);
 	}
 }
-
-//int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, int nCmdShow) {
-//
-//}
