@@ -40,9 +40,9 @@ struct Vec3
 
 	Vec3 Cross(const Vec3& v1)
 	{
-		return Vec3(v1.y * z - v1.z * y,
-			v1.z * x - v1.x * z,
-			v1.x * y - v1.y * x);
+		return Vec3(y * v1.z - z * v1.y,
+			z * v1.x - x * v1.z,
+			x * v1.y - y * v1.x);
 	}
 
 	float dot(Vec3 v) {
@@ -61,16 +61,32 @@ struct Vec3
 	}
 
 	Vec3 operator-(const Vec3 v) const { return Vec3(x - v.x, y - v.y, z - v.z); }
+	Vec3 operator+(const Vec3 v) const { return Vec3(x + v.x, y + v.y, z + v.z); }
+	Vec3 operator*(const float a) const { return Vec3(x * a, y * a, z * a); }
+	void operator-=(const Vec3 v) {
+		x -= v.x; 
+		y -= v.y;
+		z -= v.z;
+	}
+	void operator+=(const Vec3 v) {
+		x += v.x;
+		y += v.y;
+		z += v.z;
+	}
+	void operator*=(const float a) {
+		x *= a;
+		y *= a;
+		z *= a;
+	}
+
 
 	Vec3* Schmit_orthono() {
-		Vec3 u;
-		Vec3 n = normalize();
-		if (Vec3(1, 0, 0) == n) u.set_value(0, 1, 0);
-		else u.set_value(1, 0, 0);
+		Vec3 u(0, 1, 0);
+		Vec3 gaze = normalize();
 
-		u = n.Cross(u).normalize();
-		Vec3 v = u.Cross(n);
-		Vec3 frame[3] = { n, u, v };
+		Vec3 right = u.Cross(gaze).normalize();
+		Vec3 up = gaze.Cross(right);
+		Vec3 frame[3] = { gaze, up, right };
 		return frame;
 	}
 };
@@ -231,9 +247,9 @@ public:
 		return tr;
 	}
 
-	static Matrix Rotation(int xyz, int _theta) {
+	static Matrix Rotation(int xyz, float _theta) {
 		Matrix ro;
-		int theta = _theta;
+		float theta = _theta;
 		double cos = std::cos(theta);
 		double sin = std::sin(theta);
 		ro.identity();
@@ -265,6 +281,30 @@ public:
 		sc.m[10] = zratio;
 		sc.m[15] = 1;
 	}
+
+	const void ViewMatrix(Vec3 from, Vec3 lookat) {
+		lookat.normalize();
+		Vec3* frame = lookat.Schmit_orthono();
+		lookat = frame[0];
+		Vec3 up = frame[1];
+		Vec3 right = frame[2];
+
+		m[0] = right.x;
+		m[1] = right.y;
+		m[2] = right.z;
+		m[3] = -1 * right.dot(from);
+		m[4] = up.x;
+		m[5] = up.y;
+		m[6] = up.z;
+		m[7] = -1 * up.dot(from);
+		m[8] = lookat.x;
+		m[9] = lookat.y;
+		m[10] = lookat.z;
+		m[11] = -1 * lookat.dot(from);
+		m[15] = 1;
+
+	}
+
 
 	Matrix invert()
 	{

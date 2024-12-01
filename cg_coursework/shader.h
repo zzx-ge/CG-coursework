@@ -8,7 +8,6 @@
 #include "GEMModel.h"
 #include "adapter.h"
 #include "ShaderReflection.h"
-#include "Camera.h"
 
 #pragma comment(lib, "dxguid.lib")
 
@@ -19,7 +18,7 @@ struct TransformBuffer {
 
 class Shaders
 {
-private:
+public:
 	std::vector<ConstantBuffer> psConstantBuffers;
 	std::vector<ConstantBuffer> vsConstantBuffers;
 	DXcore* dx;
@@ -34,7 +33,18 @@ private:
 			}
 		}
 	}
-public:
+
+	void uploadConstant(const std::string& constBufferName, const std::string& variableName, std::vector<ConstantBuffer>& buffers) {
+		for (auto& buffer : buffers)
+		{
+			if (buffer.name == constBufferName)
+			{
+				buffer.upload(dx);
+				return;
+			}
+		}
+	}
+
 	ID3D11VertexShader* vertexShader;
 	ID3D11PixelShader* pixelShader;
 	ID3D11InputLayout* layout;
@@ -55,10 +65,18 @@ public:
 		updateConstant(constantBufferName, variableName, data, vsConstantBuffers);
 	}
 
+	void uploadConstantVS(const std::string& constantBufferName, const std::string& variableName) {
+		uploadConstant(constantBufferName, variableName, vsConstantBuffers);
+	}
+
 	//Update a specific constant buffer variable for the pixel shader
 	void updateConstantPS(const std::string& constantBufferName, const std::string& variableName, void* data)
 	{
 		updateConstant(constantBufferName, variableName, data, psConstantBuffers);
+	}
+
+	void uploadConstantPS(const std::string& constantBufferName, const std::string& variableName) {
+		uploadConstant(constantBufferName, variableName, psConstantBuffers);
 	}
 
 	std::string LoadShaders(std::string filePath) {
@@ -121,28 +139,13 @@ public:
 		dx->devicecontext->IASetInputLayout(layout);
 		dx->devicecontext->VSSetShader(vertexShader, NULL, 0);
 		dx->devicecontext->PSSetShader(pixelShader, NULL, 0);
-		for (int i = 0; i < vsConstantBuffers.size(); i++)
-		{
-			vsConstantBuffers[i].upload(dx);
-		}
-		for (int i = 0; i < psConstantBuffers.size(); i++) {
-			psConstantBuffers[i].upload(dx);
-		}
 	}
 
-	void init(std::string PSfilename, std::string VSfilename, Camera& camera) {
+	void init(std::string PSfilename, std::string VSfilename) {
 		std::string code_ps = LoadShaders(PSfilename);
 		std::string code_vs = LoadShaders(VSfilename);
 		loadVS(code_vs);
 		loadPS(code_ps);
-		
-		TransformBuffer TB;
-		Matrix world;
-		world.identity();
-		TB.VP = camera.GetViewMatrix().mul(camera.GetProjectionMatrix());
-		TB.World = world;
-		updateConstantVS("TransformBuffer", "W", &(TB.World));
-		updateConstantVS("TransformBuffer", "VP", &(TB.VP));
 	}
 
 	void DrawModel(const GEMModel& model, DXcore& dx) {

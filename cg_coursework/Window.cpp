@@ -3,6 +3,9 @@ Window* window;
 #define WINDOW_GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
 #define WINDOW_GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
 
+float currentx;
+float currenty;
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	switch (msg)
 	{
@@ -46,7 +49,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		return 0;
 	}
 
-
 	default:
 	{
 		return DefWindowProc(hwnd, msg, wParam, lParam);
@@ -88,4 +90,29 @@ void Window::processMessages() {
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
+}
+
+void Window::LockCursorToWindow() {
+	RECT rect;
+	GetClientRect(hwnd, &rect);
+	MapWindowPoints(hwnd, nullptr, (POINT*)&rect, 2);
+	ClipCursor(&rect); //Constrain the cursor within the client area
+}
+
+void Window::CenterCursor() {
+	RECT rect;
+	GetClientRect(hwnd, &rect);
+	POINT center;
+	center.x = (rect.right - rect.left) / 2;
+	center.y = (rect.bottom - rect.top) / 2;
+	ClientToScreen(hwnd, &center);
+	SetCursorPos(center.x, center.y);
+}
+
+void Window::updateMouse(int x, int y) {
+	deltaX = x - mousex; //x and y are the latest mouse position
+	deltaY = y - mousey;
+	mousex = x;
+	mousey = y;
+	dirty = true;
 }

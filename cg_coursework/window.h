@@ -11,18 +11,23 @@ public:
 	int width;
 	int height;
 	bool keys[256];
+
 	int mousex;
 	int mousey;
+	int deltaX;
+	int deltaY;
+	bool dirty = false;
+
 	bool mouseButtons[3];
 	int mouseWheel;
+	bool firstMouse = true;
 
 	//LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 	void create(std::string window_name, int _window_width, int _window_height, int window_x = 0, int window_y = 0);
 	void processMessages();
-	void updateMouse(int x, int y) {
-		mousex = x;
-		mousey = y;
-	}
+	void LockCursorToWindow();
+	void CenterCursor();
+	void updateMouse(int x, int y);
 	bool keyPressed(int key)
 	{
 		return keys[key];
