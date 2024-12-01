@@ -8,6 +8,8 @@ public:
 	HWND hwnd; //Where to store the window
 	HINSTANCE hinstance; 
 	std::string name;
+	RECT screen;
+	POINT center;
 	int width;
 	int height;
 	bool keys[256];

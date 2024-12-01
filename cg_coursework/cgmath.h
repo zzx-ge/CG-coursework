@@ -274,6 +274,24 @@ public:
 		return ro;
 	}
 
+	static Matrix Rotation(Vec3 axis, float theta) {
+		double cos = std::cos(theta);
+		double sin = std::sin(theta);
+		double t = 1 - cos;
+		Matrix ro;
+		ro.identity();
+		ro[0] = t * axis.x * axis.x + cos;
+		ro[1] = t* axis.x * axis.y - sin * axis.z;
+		ro[2] = t * axis.x * axis.z + sin * axis.y;
+		ro[4] = t * axis.x * axis.y + sin * axis.z;
+		ro[5] = t * axis.y * axis.y + cos;
+		ro[6] = t * axis.y * axis.z - sin * axis.x;
+		ro[8] = t * axis.x * axis.z - sin * axis.y;
+		ro[9] = t * axis.y * axis.z + sin * axis.x;
+		ro[10] = t * axis.z * axis.z + cos;
+		return ro;
+	}
+
 	static Matrix Scale(float xratio, float yratio, float zratio) {
 		Matrix sc;
 		sc.m[0] = xratio;

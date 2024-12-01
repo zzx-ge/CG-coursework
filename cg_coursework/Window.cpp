@@ -80,6 +80,11 @@ void Window::create(std::string window_name, int _window_width, int _window_heig
 	hwnd = CreateWindowEx(WS_EX_APPWINDOW, wname.c_str(), wname.c_str(), style, window_x, window_y, width, height, NULL, NULL, hinstance, this);
 	memset(keys, 0, 256 * sizeof(bool)); //??????
 	window = this;
+	GetClientRect(hwnd, &screen);
+	center.x = (screen.right - screen.left) / 2;
+	center.y = (screen.bottom - screen.top) / 2;
+	ClientToScreen(hwnd, &center);
+
 }
 
 void Window::processMessages() {
@@ -110,8 +115,11 @@ void Window::CenterCursor() {
 }
 
 void Window::updateMouse(int x, int y) {
-	deltaX = x - mousex; //x and y are the latest mouse position
-	deltaY = y - mousey;
+	deltaX = x - center.x + 11; //x and y are the latest mouse position
+	deltaY = y - center.y + 45;
+	//std::cout << x << "  " << y << std::endl;
+	//std::cout << center.x << " " << center.y << std::endl;
+	SetCursorPos(center.x, center.y);
 	mousex = x;
 	mousey = y;
 	dirty = true;

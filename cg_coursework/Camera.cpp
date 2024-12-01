@@ -47,7 +47,7 @@ void Camera::lookatControl(Window& window) {
 		pitch = 0;
 	}
 	Matrix rx, ry;
-	rx = rx.Rotation(0, pitch);
+	rx = rx.Rotation(Vec3(viewMatrix[0], viewMatrix[1], viewMatrix[2]), pitch); //It should rotate by the right vector
 	ry = ry.Rotation(1, yaw);
 	Matrix ro = rx.mul(ry);
 	lookat = ro.mulVec(lookat);
