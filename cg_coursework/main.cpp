@@ -4,6 +4,7 @@
 #include "vertex.h"
 #include "Timer.h"
 #include "gamecontrol.h"
+#include "GEMModel.h"
 #include <iostream>
 
 extern "C" {
@@ -32,7 +33,10 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, int nC
 	cube.init(dx);
 	Sphere sphere;
 	sphere.init(dx);
-	//shader.updateConstantVS("TransformBuffer", "W", &(plane.world));
+	GEMModel model;
+	model.init("Resources/TRex.gem", dx, Vec3(0, 0, 0));
+	AnimationInstance instance;
+	instance.init(&(model.animation));
 	gm gamemanager;
 	TIMER timer;
 	shader.apply();
@@ -49,6 +53,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, int nC
 		plane.Draw(dx, shader, world);
 		cube.Draw(dx, shader, world);
 		sphere.Draw(dx, shader, world);
+		model.Draw(dx, shader, instance, gamemanager.dt, world);
 		//HandleMouseInput(win.hwnd, camera, gamemanager.dt, gamemanager.lastX, gamemanager.lastY);
 		dx.present();
 	}

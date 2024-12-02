@@ -9,13 +9,9 @@ Camera::Camera(float fovY, float aspectRatio, float nearZ, float farZ, float rad
 void Camera::Update(Shaders& shader) {
 	//Create the view matrix
 	viewMatrix.ViewMatrix(from, lookat); //look at = to - from
-	TransformBuffer TB;
-	Matrix world;
-	world.identity();
-	TB.VP = projectionMatrix.mul(viewMatrix);
-	TB.World = world;
-	shader.updateConstantVS("TransformBuffer", "W", &(TB.World));
-	shader.updateConstantVS("TransformBuffer", "VP", &(TB.VP));
+	Matrix VP = projectionMatrix.mul(viewMatrix);
+	shader.updateConstantVS("viewProjection", "VP", &VP);
+	shader.uploadConstantVS("viewProjection", "VP");
 }
 
 void Camera::fromControl(Window& window, float dt) {

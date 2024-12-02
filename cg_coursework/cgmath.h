@@ -247,6 +247,15 @@ public:
 		return tr;
 	}
 
+	static Matrix Translation(Vec3 vec) {
+		Matrix tr;
+		tr.identity();
+		tr[3] = vec.x;
+		tr[7] = vec.y;
+		tr[11] = vec.z;
+		return tr;
+	}
+
 	static Matrix Rotation(int xyz, float _theta) {
 		Matrix ro;
 		float theta = _theta;
@@ -294,10 +303,20 @@ public:
 
 	static Matrix Scale(float xratio, float yratio, float zratio) {
 		Matrix sc;
+		sc.identity();
 		sc.m[0] = xratio;
 		sc.m[5] = yratio;
 		sc.m[10] = zratio;
-		sc.m[15] = 1;
+		return sc;
+	}
+
+	static Matrix Scale(Vec3 v) {
+		Matrix sc;
+		sc.identity();
+		sc.m[0] = v.x;
+		sc.m[5] = v.y;
+		sc.m[10] = v.z;
+		return sc;
 	}
 
 	const void ViewMatrix(Vec3 from, Vec3 lookat) {
@@ -354,4 +373,85 @@ public:
 		return inv;
 	}
 
+};
+
+class Quaternion
+{
+public:
+	float w, x, y, z;
+
+	Quaternion() : w(1.f), x(0.f), y(0.f), z(0.f) {}
+	Quaternion(float _w, float _x, float _y, float _z) : w(_w), x(_x), y(_y), z(_z) {}
+
+	float norm() const {
+		return std::sqrt(w * w + x * x + y * y + z * z);
+	}
+
+	Quaternion normalize() const {
+		float n = norm();
+		if (n == 0.f) return Quaternion();
+		return Quaternion(w / n, x / n, y / n, z / n);
+	}
+
+	Quaternion conjugate() const {
+		return Quaternion(w, -x, -y, -z);
+	}
+
+	Quaternion operator*(const Quaternion& q) const {
+		return Quaternion(
+			w * q.w - x * q.x - y * q.y - z * q.z, // Scalar part
+			w * q.x + x * q.w + y * q.z - z * q.y, // Vector part (x)
+			w * q.y - x * q.z + y * q.w + z * q.x, // Vector part (y)
+			w * q.z + x * q.y - y * q.x + z * q.w  // Vector part (z)
+		);
+	}
+
+	Vec3 rotateVector(Vec3 vec) const {
+		Quaternion vectorQuat(0, vec.x, vec.y, vec.z);
+		Quaternion result = (*this) * vectorQuat * conjugate();
+		return Vec3(result.x, result.y, result.z);
+	}
+
+	static Quaternion slerp(const Quaternion& q1, const Quaternion& q2, float t) {
+		//clamp t between 0 and 1
+		t = std::fmax(0.f, std::fmin(1.f, t));
+		float dot = q1.w * q2.w + q1.x * q2.x + q1.y * q2.y + q1.z * q2.z;
+		//If the dot product is negative, negate one quaternion to ensure shortest path
+		Quaternion q2Modified = (dot < 0.0f) ? Quaternion(-q2.w, -q2.x, -q2.y, -q2.z) : q2;
+		//Interpolate
+		float theta = std::acos(dot);
+		float sinTheta = std::sqrt(1.f - dot * dot);
+		if (std::fabs(sinTheta) < 1e-6) { // If sin(theta) is near zero, use linear interpolation
+			return Quaternion(
+				(1 - t) * q1.w + t * q2Modified.w,
+				(1 - t) * q1.x + t * q2Modified.x,
+				(1 - t) * q1.y + t * q2Modified.y,
+				(1 - t) * q1.z + t * q2Modified.z
+			).normalize();
+		}
+		else {
+			float a = std::sin((1 - t) * theta) / sinTheta;
+			float b = std::sin(t * theta) / sinTheta;
+			return Quaternion(
+				a * q1.w + b * q2Modified.w,
+				a * q1.x + b * q2Modified.x,
+				a * q1.y + b * q2Modified.y,
+				a * q1.z + b * q2Modified.z
+			).normalize();
+		}
+	}
+
+	Matrix toMatrix() const {
+		Quaternion q = this->normalize();
+		float xx = q.x * q.x;
+		float yy = q.y * q.y;
+		float zz = q.z * q.z;
+		float xy = q.x * q.y;
+		float xz = q.x * q.z;
+		float yz = q.y * q.z;
+		float wx = q.w * q.x;
+		float wy = q.w * q.y;
+		float wz = q.w * q.z;
+		return Matrix(1.0f - 2.0f * (yy + zz), 2.0f * (xy - wz), 2.0f * (xz + wy), 0.0f, 2.0f * (xy + wz), 1.0f - 2.0f * (xx + zz), 2.0f * (yz - wx), 0.0f, 2.0f * (xz - wy), 2.0f * (yz + wx), 1.0f - 2.0f * (xx + yy), 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+	}
 };

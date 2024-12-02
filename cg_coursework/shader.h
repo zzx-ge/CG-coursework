@@ -5,16 +5,23 @@
 #include <sstream>
 #include <D3Dcompiler.h>
 #include <d3d11shader.h>
-#include "GEMModel.h"
+#include "cgmath.h"
 #include "adapter.h"
 #include "ShaderReflection.h"
 
 #pragma comment(lib, "dxguid.lib")
-
-struct TransformBuffer {
-	Matrix VP;
-	Matrix World;
+struct World {
+	Matrix Ws;
 };
+
+struct viewProjection {
+	Matrix VP;
+};
+
+struct animatedMesh {
+	Matrix bones[256];
+};
+
 
 class Shaders
 {
@@ -28,6 +35,7 @@ public:
 		{
 			if (buffer.name == constantBufferName)
 			{
+				cout << buffer.name << endl;
 				buffer.update(variableName, data);
 				return;
 			}
@@ -126,9 +134,12 @@ public:
 			{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 			{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 			{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "BONEIDS", 0, DXGI_FORMAT_R32G32B32A32_UINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "BONEWEIGHTS", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "TYPE", 0, DXGI_FORMAT_R32_UINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
 		};
 
-		dx->device->CreateInputLayout(layoutDesc, 4, compiledVertexShader->GetBufferPointer(), compiledVertexShader->GetBufferSize(), &layout);
+		dx->device->CreateInputLayout(layoutDesc, 7, compiledVertexShader->GetBufferPointer(), compiledVertexShader->GetBufferSize(), &layout);
 		ConstantBufferReflection reflection;
 		reflection.build(dx, compiledVertexShader, vsConstantBuffers, textureBindPointsVS, ShaderStage::VertexShader);
 		compiledVertexShader->Release();
@@ -146,24 +157,5 @@ public:
 		std::string code_vs = LoadShaders(VSfilename);
 		loadVS(code_vs);
 		loadPS(code_ps);
-	}
-
-	void DrawModel(const GEMModel& model, DXcore& dx) {
-		const auto& meshes = model.GetMeshes();
-		const auto& vertexBuffers = model.GetVertexBuffers();
-		const auto& indexBuffers = model.GetIndexBuffers();
-		
-		for (size_t i = 0; i < meshes.size(); ++i) {
-			UINT stride = model.IsAnimated() ? sizeof(GEMLoader::GEMAnimatedVertex) : sizeof(GEMLoader::GEMStaticVertex);
-			UINT offset = 0;
-
-			dx.devicecontext->IASetVertexBuffers(0, 1, &vertexBuffers[i], &stride, &offset);
-			dx.devicecontext->IASetIndexBuffer(indexBuffers[i], DXGI_FORMAT_R32_UINT, 0);
-			dx.devicecontext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-			dx.devicecontext->VSSetShader(vertexShader, nullptr, 0);
-			dx.devicecontext->PSSetShader(pixelShader, nullptr, 0);
-			dx.devicecontext->DrawIndexed(static_cast<UINT>(meshes[i].indices.size()), 0, 0);
-		}
 	}
 };
